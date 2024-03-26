@@ -27,7 +27,7 @@ public class UDPserver {
                     String[] parts = request.split(" ");
                     if (parts.length == 2) {
                         int imageNumber = Integer.parseInt(parts[1]);
-                        String imagePath = "path/to/your/images/image" + imageNumber + ".jpg"; // Adjust the path as necessary
+                        String imagePath = "./images" + imageNumber + ".jpg"; // Adjust the path as necessary
 
                         try {
                             // Load the image file into a byte array
@@ -45,4 +45,20 @@ public class UDPserver {
                             socket.send(errorPacket);
                         }
                     }
-
+                } else {
+                    // If the request does not start with "Image", send an error message back to the client
+                    String errorMessage = "Error: Unsupported request. Please request an image.";
+                    byte[] errorData = errorMessage.getBytes();
+                    DatagramPacket errorPacket = new DatagramPacket(errorData, errorData.length, clientAddress, clientPort);
+                    socket.send(errorPacket);
+                }
+            }
+        } catch (IOException e) {
+            System.out.println("Server Exception: " + e.getMessage());
+        } finally {
+            if (socket != null && !socket.isClosed()) {
+                socket.close();
+            }
+        }
+    }
+}

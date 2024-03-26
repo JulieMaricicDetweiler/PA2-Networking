@@ -67,7 +67,10 @@ public class TCPserver {
 
     private static void sendImage(Socket client, int imageNumber) {
         try {
-            File file = new File("path/to/your/images/image" + imageNumber + ".jpg"); // Adjust path as needed
+            long startTime = System.currentTimeMillis(); // Start measuring time
+
+            File file = new File("./images/image" + imageNumber + ".jpg"); // Adjust path as needed
+            System.out.println("File length in bytes: " + file.length());
             byte[] bytes = new byte[(int) file.length()];
             FileInputStream fis = new FileInputStream(file);
             BufferedInputStream bis = new BufferedInputStream(fis);
@@ -77,11 +80,15 @@ public class TCPserver {
             os.write(bytes, 0, bytes.length);
             os.flush();
 
-            System.out.println("Image " + imageNumber + " sent to client.");
+            long endTime = System.currentTimeMillis(); // End measuring time
+            long elapsedTime = endTime - startTime; // Calculate elapsed time
+
+            System.out.println("Image " + imageNumber + " sent to client. Time taken: " + elapsedTime + "ms");
         } catch (FileNotFoundException e) {
             System.out.println("Image file not found.");
         } catch (IOException e) {
             System.out.println("Error sending the image.");
         }
     }
+
 }

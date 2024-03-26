@@ -14,8 +14,8 @@ public class UDPclient {
             Random rand = new Random();
 
             // Directly request an image without user input for jokes
-            for(int i = 1; i <= 10; i++) { // Assuming you want to fetch all images in sequence or random
-                int imageNumber = rand.nextInt(10) + 1; // Randomly choose an image number
+            for(int i = 1; i <= 3; i++) { // Assuming you want to fetch all images in sequence or random
+                int imageNumber = rand.nextInt(3) + 1; // Randomly choose an image number
                 String request = "Image " + imageNumber; // Request a specific image
                 sendData = request.getBytes();
 
