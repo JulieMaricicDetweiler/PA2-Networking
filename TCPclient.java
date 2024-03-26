@@ -1,7 +1,6 @@
 import java.io.*;
 import java.net.*;
-import java.util.Scanner;
-
+import java.util.Random;
 
 public class TCPclient {
     public static void main(String[] args) {
@@ -11,45 +10,52 @@ public class TCPclient {
             return;
         }
 
-        String serverIP = args[0]; //Storing the server IP
-        int port = Integer.parseInt(args[1]); //Parsing and storing the Port Number
+        String serverIP = args[0]; // Storing the server IP
+        int port = Integer.parseInt(args[1]); // Parsing and storing the Port Number
 
+        try (Socket socket = new Socket(serverIP, port)) { // Establishing Connection with server
+            // For simplicity, we are directly requesting images in a loop without user input
+            for (int i = 1; i <= 3; i++) { // Assuming you want to download 3 images
+                Random rand = new Random();
+                int imageNumber = rand.nextInt(3) + 1; // Randomly choose an image between 1 and 3
 
-        try (Socket socket = new Socket(serverIP, port); //Establishing Connection with server
-             PrintWriter out = new PrintWriter(socket.getOutputStream(), true); //To send data to the server
-             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream())); //To receive data from the server
-             Scanner scanner = new Scanner(System.in)) { //Scanner to read user input
+                // Record the start time before sending the request
+                long startTime = System.currentTimeMillis();
 
-            // Initial server response (greeting)
-            System.out.println("Recieved from server: " + in.readLine());
+                String request = "Image " + imageNumber; // Constructing the image request command
+                System.out.println("Requesting " + request);
 
-            // Interaction with the server until the user says bye
-            String inputLine;
-            while (true) {
-                System.out.print("Enter command (Joke 1/Joke 2/Joke 3/bye): ");
-                inputLine = scanner.nextLine();
+                // Send request to the server
+                try (PrintWriter out = new PrintWriter(socket.getOutputStream(), true)) {
+                    out.println(request); // Sending the request to the server
 
-                if ("bye".equalsIgnoreCase(inputLine)) {
-                    out.println(inputLine);
-                    System.out.println("Exiting.");
-                    break;
-                }
-                out.println(inputLine);
-                String serverResponse;
-                while (!(serverResponse = in.readLine()).equals("END OF JOKE")) {
-                    if (serverResponse.startsWith("Error:")) {
-                        System.out.println("Server response: " + serverResponse);
-                        break;
+                    // Receive image data from the server
+                    try (DataInputStream dis = new DataInputStream(socket.getInputStream());
+                         FileOutputStream fos = new FileOutputStream("received_image" + imageNumber + ".jpg")) {
+
+                        long fileSize = dis.readLong(); // Read file size
+                        byte[] buffer = new byte[8192];
+                        int bytesRead;
+                        while ((bytesRead = dis.read(buffer)) != -1) {
+                            fos.write(buffer, 0, bytesRead);
+                        }
+                        fos.flush();
+                        System.out.println("Image " + imageNumber + " received and saved.");
+
+                        // Record the end time after receiving the complete image
+                        long endTime = System.currentTimeMillis();
+
+                        // Calculate and print the total round-trip time
+                        long roundTripTime = endTime - startTime;
+                        System.out.println("Round-trip time for image " + imageNumber + ": " + roundTripTime + "ms");
+                    } catch (IOException e) {
+                        System.out.println("Error receiving image data: " + e.getMessage());
                     }
-                    else {
-                        String fileName = "joke" + inputLine.charAt(inputLine.length()-1) + ".txt";
-                        PrintWriter toFile = new PrintWriter(new FileWriter(fileName, true));
-                        toFile.println(serverResponse);
-                        toFile.close();
-                    }
+                } catch (IOException e) {
+                    System.out.println("Error sending request: " + e.getMessage());
                 }
             }
-        } catch (IOException e) { //catching exceptions and printing an error message
+        } catch (IOException e) {
             System.out.println("Client Error: " + e.getMessage());
         }
     }
