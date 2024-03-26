@@ -7,12 +7,15 @@ public class TCPserver {
         ServerSocket server = null;
         try {
             // Validate port number and create server socket
-            String portRegex = "^([1-9][0-9]{0,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])$";
-            if (args.length != 1 || !args[0].matches(portRegex)) {
-                System.out.println("Please follow the format: 'java server [port_number]' with port number between 1 and 65535");
+            if (args.length != 1) {
+                System.out.println("Usage: java TCPserver <port_number>");
                 return;
             }
             port_number = Integer.parseInt(args[0]);
+            if (port_number < 1 || port_number > 65535) {
+                System.out.println("Port number must be between 1 and 65535");
+                return;
+            }
             server = new ServerSocket(port_number);
             System.out.println("Server is running on port " + port_number);
 
@@ -39,20 +42,20 @@ public class TCPserver {
         try {
             PrintWriter toClient = new PrintWriter(client.getOutputStream(), true);
             BufferedReader fromClient = new BufferedReader(new InputStreamReader(client.getInputStream()));
-            toClient.println("Hello!");
 
             String str;
             while ((str = fromClient.readLine()) != null) {
                 str = str.trim();
                 System.out.println("Got request from client: \"" + str + "\"");
                 if ("bye".equalsIgnoreCase(str)) {
-                    toClient.println("disconnected");
+                    toClient.println("Disconnected");
                     break;
-                } else if (str.matches("Joke 1|Joke 2|Joke 3")) {
-                    int fileNumber = Integer.parseInt(str.substring(str.length() - 1));
-                    sendJoke(toClient, fileNumber);
+                } else if (str.startsWith("Image")) {
+                    // Extract the image number from the request
+                    int imageNumber = Integer.parseInt(str.substring(6)); // Assuming request format is "Image X"
+                    sendImage(client, imageNumber);
                 } else {
-                    toClient.println("Error: Bad Request. Please only enter one of the following options as your request: [Joke 1, Joke 2, Joke 3]");
+                    toClient.println("Error: Unsupported request. Please request an image.");
                 }
             }
             System.out.println("Closing connection...");
@@ -62,21 +65,23 @@ public class TCPserver {
         }
     }
 
-    private static void sendJoke(PrintWriter toClient, int fileNum) {
+    private static void sendImage(Socket client, int imageNumber) {
         try {
-            FileReader fileReader = new FileReader("joke" + fileNum + ".txt");
-            BufferedReader jokeReader = new BufferedReader(fileReader);
-            String joke;
-            while ((joke = jokeReader.readLine()) != null) {
-                toClient.println(joke);
-            }
-            toClient.println("END OF JOKE");
-            jokeReader.close();
+            File file = new File("path/to/your/images/image" + imageNumber + ".jpg"); // Adjust path as needed
+            byte[] bytes = new byte[(int) file.length()];
+            FileInputStream fis = new FileInputStream(file);
+            BufferedInputStream bis = new BufferedInputStream(fis);
+            bis.read(bytes, 0, bytes.length);
+
+            OutputStream os = client.getOutputStream();
+            os.write(bytes, 0, bytes.length);
+            os.flush();
+
+            System.out.println("Image " + imageNumber + " sent to client.");
         } catch (FileNotFoundException e) {
-            toClient.println("Joke file not found.");
+            System.out.println("Image file not found.");
         } catch (IOException e) {
-            toClient.println("Error reading joke file.");
+            System.out.println("Error sending the image.");
         }
-        toClient.flush();
     }
 }
