@@ -1,40 +1,37 @@
 import java.io.*;
 import java.net.*;
-import java.util.Random;
-import java.util.HashSet;
+import java.util.*;
 
 public class TCPclient {
     public static void main(String[] args) {
-        // Check if the correct number of arguments are passed (Server IP and the Port Number)
         if (args.length != 2) {
             System.out.println("Usage: java Client <Server IP> <Port Number>");
             return;
         }
 
-        String serverIP = args[0]; // Storing the server IP
-        int port = Integer.parseInt(args[1]); // Parsing and storing the Port Number
-
-        int NUM_IMAGES = 3; //TODO: change to 10
+        String serverIP = args[0];
+        int port = Integer.parseInt(args[1]);
+        final int NUM_IMAGES = 3; // Change to 10 for final requirement
         HashSet<Integer> sent = new HashSet<>();
+        ArrayList<Long> roundTripTimes = new ArrayList<>(); // To store the round-trip times
 
         try (Socket socket = new Socket(serverIP, port);
              DataOutputStream out = new DataOutputStream(socket.getOutputStream());
              DataInputStream dis = new DataInputStream(socket.getInputStream())) {
-            //requesting images in a loop without user input
-            while(sent.size() < NUM_IMAGES) {
+
+            while (sent.size() < NUM_IMAGES) {
                 Random rand = new Random();
+                // Ensure unique images are requested
                 int imageNumber = rand.nextInt(NUM_IMAGES) + 1;
+                if (!sent.contains(imageNumber)) {
+                    sent.add(imageNumber);
 
-                if(!sent.contains(imageNumber)) { //make sure image number has not alread been requested
-                    sent.add(imageNumber); //add requested image number to set
-
-                    long startTime = System.currentTimeMillis(); //get start time
-
-                    String request = "Image " + imageNumber; //image request command concatenation
+                    long startTime = System.currentTimeMillis();
+                    String request = "Image " + imageNumber;
                     System.out.println("Requesting " + request);
-                    out.writeUTF(request); //send request to server
+                    out.writeUTF(request);
 
-                    long fileSize = dis.readLong(); //get file size
+                    long fileSize = dis.readLong();
                     byte[] buffer = new byte[8192];
                     int bytesRead;
                     long totalRead = 0;
@@ -44,20 +41,42 @@ public class TCPclient {
                             fos.write(buffer, 0, bytesRead);
                             totalRead += bytesRead;
                         }
-                        fos.flush();
                     }
                     System.out.println("Image " + imageNumber + " received and saved.");
 
-                    //get end time
                     long endTime = System.currentTimeMillis();
-
-                    //calc total time and display it
                     long roundTripTime = endTime - startTime;
-                    System.out.println("Round-trip time for image " + imageNumber + ": " + roundTripTime + "ms\n");
+                    roundTripTimes.add(roundTripTime); // Store round-trip time
+                    System.out.println("Round-trip time for image " + imageNumber + ": " + roundTripTime + "ms");
                 }
             }
+
+            // After all requests, calculate statistics
+            calculateAndDisplayStatistics(roundTripTimes);
+
         } catch (IOException e) {
             System.out.println("Client Error: " + e.getMessage());
         }
+    }
+
+    private static void calculateAndDisplayStatistics(ArrayList<Long> times) {
+        long min = Collections.min(times);
+        long max = Collections.max(times);
+        double avg = times.stream().mapToLong(val -> val).average().orElse(0.0);
+        double stdDev = calculateStandardDeviation(times, avg);
+
+        System.out.println("\nStatistics for round-trip times:");
+        System.out.println("Min: " + min + " ms");
+        System.out.println("Max: " + max + " ms");
+        System.out.println("Average: " + avg + " ms");
+        System.out.println("Standard Deviation: " + stdDev + " ms");
+    }
+
+    private static double calculateStandardDeviation(ArrayList<Long> times, double avg) {
+        double sum = 0;
+        for (long time : times) {
+            sum += Math.pow(time - avg, 2);
+        }
+        return Math.sqrt(sum / times.size());
     }
 }

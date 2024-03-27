@@ -75,10 +75,15 @@ public class TCPserver {
     private static void sendImage(Socket client, int imageNumber) {
         try {
             File file = new File("./images/image" + imageNumber + ".jpg"); // Adjust path as needed
+            long startTime = System.currentTimeMillis(); // Start measuring meme access time
+
             byte[] bytes = new byte[(int) file.length()];
             FileInputStream fis = new FileInputStream(file);
             BufferedInputStream bis = new BufferedInputStream(fis);
             bis.read(bytes, 0, bytes.length);
+
+            long endTime = System.currentTimeMillis(); // End measuring meme access time
+            System.out.println("Meme access time for image " + imageNumber + ": " + (endTime - startTime) + "ms");
 
             DataOutputStream dos = new DataOutputStream(client.getOutputStream());
             dos.writeLong(bytes.length); // Send file size first
@@ -92,6 +97,7 @@ public class TCPserver {
             System.out.println("Error sending the image: " + e.getMessage());
         }
     }
+
 
 
 }
