@@ -38,7 +38,7 @@ public class TCPclient {
                     byte[] buffer = new byte[8192];
                     int bytesRead;
                     long totalRead = 0;
-                    try (FileOutputStream fos = new FileOutputStream("received_image" + imageNumber + ".jpg")) {
+                    try (FileOutputStream fos = new FileOutputStream("received_images_TCP/received_image" + imageNumber + ".jpg")) {
                         while (totalRead < fileSize) {
                             bytesRead = dis.read(buffer);
                             fos.write(buffer, 0, bytesRead);
