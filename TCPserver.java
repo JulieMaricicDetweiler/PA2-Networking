@@ -22,7 +22,7 @@ public class TCPserver {
             // Accept connections infinitely
             while (true) {
                 Socket client = server.accept();
-                System.out.println("Got connection request from: " + client.getInetAddress());
+                System.out.println("Got connection request from: " + client.getInetAddress() + "\n");
                 processRequest(client);
             }
         } catch (IOException e) {
@@ -85,7 +85,7 @@ public class TCPserver {
             dos.write(bytes, 0, bytes.length); // Then send file
             dos.flush();
 
-            System.out.println("Image " + imageNumber + " sent to client.");
+            System.out.println("Image " + imageNumber + " sent to client.\n");
         } catch (FileNotFoundException e) {
             System.out.println("Image file not found.");
         } catch (IOException e) {
