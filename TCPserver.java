@@ -40,22 +40,28 @@ public class TCPserver {
 
     private static void processRequest(Socket client) {
         try {
-            PrintWriter toClient = new PrintWriter(client.getOutputStream(), true);
-            BufferedReader fromClient = new BufferedReader(new InputStreamReader(client.getInputStream()));
+            DataOutputStream toClient = new DataOutputStream(client.getOutputStream());
+            DataInputStream fromClient = new DataInputStream(client.getInputStream());
 
             String str;
-            while ((str = fromClient.readLine()) != null) {
-                str = str.trim();
-                System.out.println("Got request from client: \"" + str + "\"");
-                if ("bye".equalsIgnoreCase(str)) {
-                    toClient.println("Disconnected");
-                    break;
-                } else if (str.startsWith("Image")) {
-                    // Extract the image number from the request
-                    int imageNumber = Integer.parseInt(str.substring(6)); // Assuming request format is "Image X"
-                    sendImage(client, imageNumber);
-                } else {
-                    toClient.println("Error: Unsupported request. Please request an image.");
+            while (true) {
+                try {
+                    str = fromClient.readUTF(); // Read request using DataInputStream
+                    str = str.trim();
+                    System.out.println("Got request from client: \"" + str + "\"");
+                    if ("bye".equalsIgnoreCase(str)) {
+                        toClient.writeUTF("Disconnected");
+                        break;
+                    } else if (str.startsWith("Image")) {
+                        // Extract the image number from the request
+                        int imageNumber = Integer.parseInt(str.substring(6)); // Assuming request format is "Image X"
+                        sendImage(client, imageNumber);
+                    } else {
+                        toClient.writeUTF("Error: Unsupported request. Please request an image.");
+                    }
+                } catch (EOFException e) {
+                    System.out.println("Client disconnected");
+                    break; // Break the loop if the client disconnects
                 }
             }
             System.out.println("Closing connection...");
@@ -65,30 +71,27 @@ public class TCPserver {
         }
     }
 
+
     private static void sendImage(Socket client, int imageNumber) {
         try {
-            long startTime = System.currentTimeMillis(); // Start measuring time
-
             File file = new File("./images/image" + imageNumber + ".jpg"); // Adjust path as needed
-            System.out.println("File length in bytes: " + file.length());
             byte[] bytes = new byte[(int) file.length()];
             FileInputStream fis = new FileInputStream(file);
             BufferedInputStream bis = new BufferedInputStream(fis);
             bis.read(bytes, 0, bytes.length);
 
-            OutputStream os = client.getOutputStream();
-            os.write(bytes, 0, bytes.length);
-            os.flush();
+            DataOutputStream dos = new DataOutputStream(client.getOutputStream());
+            dos.writeLong(bytes.length); // Send file size first
+            dos.write(bytes, 0, bytes.length); // Then send file
+            dos.flush();
 
-            long endTime = System.currentTimeMillis(); // End measuring time
-            long elapsedTime = endTime - startTime; // Calculate elapsed time
-
-            System.out.println("Image " + imageNumber + " sent to client. Time taken: " + elapsedTime + "ms");
+            System.out.println("Image " + imageNumber + " sent to client.");
         } catch (FileNotFoundException e) {
             System.out.println("Image file not found.");
         } catch (IOException e) {
-            System.out.println("Error sending the image.");
+            System.out.println("Error sending the image: " + e.getMessage());
         }
     }
+
 
 }
