@@ -2,6 +2,7 @@ import java.io.*;
 import java.net.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Arrays;
 
 public class UDPserver {
     public static void main(String[] args) {
@@ -27,16 +28,23 @@ public class UDPserver {
                     String[] parts = request.split(" ");
                     if (parts.length == 2) {
                         int imageNumber = Integer.parseInt(parts[1]);
-                        String imagePath = "./images" + imageNumber + ".jpg"; // Adjust the path as necessary
+                        String imagePath = "./images/"+ "image" + imageNumber + ".jpg"; // Corrected path concatenation
 
                         try {
                             // Load the image file into a byte array
                             byte[] imageData = Files.readAllBytes(Paths.get(imagePath));
 
-                            // Send the image data
-                            DatagramPacket sendPacket = new DatagramPacket(imageData, imageData.length, clientAddress, clientPort);
-                            socket.send(sendPacket);
-                            System.out.println("Image " + imageNumber + " sent to the client.");
+                            int chunkSize = 508; // Safe payload size for UDP to avoid fragmentation
+                            for (int i = 0; i < imageData.length; i += chunkSize) {
+                                int end = Math.min(imageData.length, i + chunkSize);
+                                byte[] chunk = Arrays.copyOfRange(imageData, i, end);
+                                DatagramPacket sendPacket = new DatagramPacket(chunk, chunk.length, clientAddress, clientPort);
+                                socket.send(sendPacket);
+                            }
+                            // Send a zero-length packet as end of transmission indicator
+                            socket.send(new DatagramPacket(new byte[0], 0, clientAddress, clientPort));
+
+                            System.out.println("Image " + imageNumber + " sent to the client in chunks.");
                         } catch (IOException e) {
                             System.out.println("Error loading or sending image: " + e.getMessage());
                             // Send an error message back to the client if the image couldn't be loaded or sent
