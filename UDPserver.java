@@ -28,30 +28,27 @@ public class UDPserver {
                     String[] parts = request.split(" ");
                     if (parts.length == 2) {
                         int imageNumber = Integer.parseInt(parts[1]);
-                        String imagePath = "./images/"+ "image" + imageNumber + ".jpg"; // Corrected path concatenation
+                        String imagePath = "./images/" + "image" + imageNumber + ".jpg"; // Corrected path concatenation
 
-                        try {
-                            // Load the image file into a byte array
-                            byte[] imageData = Files.readAllBytes(Paths.get(imagePath));
+                        long startTime = System.nanoTime(); // Start timing
 
-                            int chunkSize = 508; // Safe payload size for UDP to avoid fragmentation
-                            for (int i = 0; i < imageData.length; i += chunkSize) {
-                                int end = Math.min(imageData.length, i + chunkSize);
-                                byte[] chunk = Arrays.copyOfRange(imageData, i, end);
-                                DatagramPacket sendPacket = new DatagramPacket(chunk, chunk.length, clientAddress, clientPort);
-                                socket.send(sendPacket);
-                            }
-                            // Send a zero-length packet as end of transmission indicator
-                            socket.send(new DatagramPacket(new byte[0], 0, clientAddress, clientPort));
+                        // Load the image file into a byte array
+                        byte[] imageData = Files.readAllBytes(Paths.get(imagePath));
 
-                            System.out.println("Image " + imageNumber + " sent to the client in chunks.");
-                        } catch (IOException e) {
-                            System.out.println("Error loading or sending image: " + e.getMessage());
-                            // Send an error message back to the client if the image couldn't be loaded or sent
-                            byte[] errorData = "Error: Unable to send image.".getBytes();
-                            DatagramPacket errorPacket = new DatagramPacket(errorData, errorData.length, clientAddress, clientPort);
-                            socket.send(errorPacket);
+                        long endTime = System.nanoTime(); // End timing
+                        System.out.println("Image " + imageNumber + " loading time: " + (endTime - startTime)/1_000_000 + " ms");
+
+                        int chunkSize = 508; // Safe payload size for UDP to avoid fragmentation
+                        for (int i = 0; i < imageData.length; i += chunkSize) {
+                            int end = Math.min(imageData.length, i + chunkSize);
+                            byte[] chunk = Arrays.copyOfRange(imageData, i, end);
+                            DatagramPacket sendPacket = new DatagramPacket(chunk, chunk.length, clientAddress, clientPort);
+                            socket.send(sendPacket);
                         }
+                        // Send a zero-length packet as end of transmission indicator
+                        socket.send(new DatagramPacket(new byte[0], 0, clientAddress, clientPort));
+
+                        System.out.println("Image " + imageNumber + " sent to the client in chunks.");
                     }
                 } else {
                     // If the request does not start with "Image", send an error message back to the client
