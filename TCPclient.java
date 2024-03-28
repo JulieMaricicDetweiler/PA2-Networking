@@ -3,22 +3,30 @@ import java.net.*;
 import java.util.*;
 import java.text.DecimalFormat;
 
-public class TCPclient {
+public class TCPClient {
     public static void main(String[] args) {
         if (args.length != 2) {
-            System.out.println("Usage: java Client <Server IP> <Port Number>");
+            System.out.println("Usage: java TCPclient <Server IP> <Port Number>");
             return;
         }
 
-        String serverIP = args[0];
-        int port = Integer.parseInt(args[1]);
+        String hostAddress = "";
+        int port = 0;
+        try {
+            hostAddress = args[0];
+            port = Integer.parseInt(args[1]);
+        } catch(NumberFormatException e) {
+            System.out.println("Error: " + e.getMessage() + "\nUsage: java TCPclient <Server IP> <Port Number>");
+            return;
+        }
+
         final int NUM_IMAGES = 3; // Change to 10 for final requirement
         HashSet<Integer> sent = new HashSet<>();
         ArrayList<Long> roundTripTimes = new ArrayList<>(); // To store the round-trip times
 
         long dnsResBegin = System.currentTimeMillis(); //BEGINNING OF TCP SETUP
 
-        try (Socket socket = new Socket(serverIP, port);
+        try (Socket socket = new Socket(hostAddress, port);
 
             DataOutputStream out = new DataOutputStream(socket.getOutputStream());
             DataInputStream dis = new DataInputStream(socket.getInputStream())) {
@@ -26,6 +34,7 @@ public class TCPclient {
             long TCPsetupTime = dnsResEnd - dnsResBegin;
             System.out.println("\nTCP setup time: " + TCPsetupTime + "ms\n--------------------------------\n");
             System.out.println("Image Request Times:");
+            
             while (sent.size() < NUM_IMAGES) {
                 Random rand = new Random();
                 // Ensure unique images are requested

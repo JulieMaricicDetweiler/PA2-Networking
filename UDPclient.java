@@ -3,23 +3,36 @@ import java.net.*;
 import java.util.*;
 import java.text.DecimalFormat;
 
-public class UDPclient {
+public class UDPClient {
     public static void main(String[] args) {
-        String hostAddress = args[0];
-        int port = Integer.parseInt(args[1]);
+        if (args.length != 2) {
+            System.out.println("Usage: java UDPclient <Server IP> <Port Number>");
+            return;
+        }
+
+        String hostAddress = "";
+        int port = 0;
+        try {
+            hostAddress = args[0];
+            port = Integer.parseInt(args[1]);
+        } catch(NumberFormatException e) {
+            System.out.println("Error: " + e.getMessage() + "\nUsage: java UDPclient <Server IP> <Port Number>");
+            return;
+        }
+
         try (DatagramSocket socket = new DatagramSocket()) {
 
             //resolve host and get time
-            long dnsResBegin = System.currentTimeMillis();
+            long dnsResBegin = System.currentTimeMillis(); //BEGIN UDP SETUP TIME
             InetAddress serverAddress = InetAddress.getByName(hostAddress); // Or replace with server IP
-            long dnsResEnd = System.currentTimeMillis();
+            long dnsResEnd = System.currentTimeMillis(); //END UDP SETUP TIME
             long dnsTotalTime = dnsResEnd - dnsResBegin;
             System.out.println("\nUDP setup time: " + dnsTotalTime + "ms\n----------------------------------\n");
 
 
             byte[] sendData;
             byte[] receiveData = new byte[65507];
-            int NUM_IMAGES = 3;
+            final int NUM_IMAGES = 3;
             Random rand = new Random();
 
             ArrayList<Long> roundTripTimes = new ArrayList<>();
@@ -34,7 +47,7 @@ public class UDPclient {
                     sent.add(imageNumber);
                     sendData = request.getBytes();
 
-                    long roundTripBegin = System.currentTimeMillis(); //beginning of round trip time
+                    long roundTripBegin = System.currentTimeMillis(); //BEGIN ROUND TRIP TIME
                     DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, serverAddress, port);
                     socket.send(sendPacket);
 
@@ -46,7 +59,7 @@ public class UDPclient {
                         socket.receive(receivePacket);
                         int length = receivePacket.getLength();
                         if (length == 0) {
-                            long roundTripEnd = System.currentTimeMillis(); //end of round trip time
+                            long roundTripEnd = System.currentTimeMillis(); //END ROUND TRIP TIME
                             long roundTripTime = roundTripEnd - roundTripBegin;
                             roundTripTimes.add(roundTripTime);
                             System.out.println("Image " + imageNumber + ": " + roundTripTime + " ms");

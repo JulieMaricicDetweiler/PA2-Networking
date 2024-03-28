@@ -4,7 +4,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
 
-public class UDPserver {
+public class UDPServer {
     public static void main(String[] args) {
         DatagramSocket socket = null;
         try {
@@ -31,12 +31,12 @@ public class UDPserver {
                         int imageNumber = Integer.parseInt(parts[1]);
                         String imagePath = "./images/" + "image" + imageNumber + ".jpg"; // Corrected path concatenation
 
-                        long imgLoadBegin = System.currentTimeMillis(); // Start timing
+                        long imgLoadBegin = System.currentTimeMillis(); // BEGIN IMAGE LOAD TIME
 
                         // Load the image file into a byte array
                         byte[] imageData = Files.readAllBytes(Paths.get(imagePath));
 
-                        long imgLoadEnd = System.currentTimeMillis(); // End timing
+                        long imgLoadEnd = System.currentTimeMillis(); // END IMAGE LOAD TIME
                         System.out.println("Image " + imageNumber + ": " + (imgLoadEnd - imgLoadBegin) + "ms");
 
                         int chunkSize = 508; // Safe payload size for UDP to avoid fragmentation
