@@ -8,7 +8,7 @@ public class UDPserver {
     public static void main(String[] args) {
         DatagramSocket socket = null;
         try {
-            int port = 1234; // Replace with your port
+            int port = Integer.parseInt(args[0]); // Replace with your port
             socket = new DatagramSocket(port);
             System.out.println("Server is running on port " + port);
 

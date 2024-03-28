@@ -4,11 +4,13 @@ import java.util.*;
 
 public class UDPclient {
     public static void main(String[] args) {
+        String hostAddress = args[0];
+        int port = Integer.parseInt(args[1]);
         try (DatagramSocket socket = new DatagramSocket()) {
 
             //resolve host and get time
             long dnsResBegin = System.currentTimeMillis();
-            InetAddress serverAddress = InetAddress.getByName("localhost"); // Or replace with server IP
+            InetAddress serverAddress = InetAddress.getByName(hostAddress); // Or replace with server IP
             long dnsResEnd = System.currentTimeMillis();
             long dnsTotalTime = dnsResEnd - dnsResBegin;
             System.out.println("DNS resolution time: " + dnsTotalTime + "ms");
@@ -32,7 +34,7 @@ public class UDPclient {
                     sendData = request.getBytes();
 
                     long roundTripBegin = System.currentTimeMillis(); //beginning of round trip time
-                    DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, serverAddress, 1234);
+                    DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, serverAddress, port);
                     socket.send(sendPacket);
 
                     FileOutputStream fos = new FileOutputStream("received_image" + imageNumber + ".jpg");
