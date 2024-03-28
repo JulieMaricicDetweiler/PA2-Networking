@@ -30,13 +30,13 @@ public class UDPserver {
                         int imageNumber = Integer.parseInt(parts[1]);
                         String imagePath = "./images/" + "image" + imageNumber + ".jpg"; // Corrected path concatenation
 
-                        long startTime = System.nanoTime(); // Start timing
+                        long imgLoadBegin = System.currentTimeMillis(); // Start timing
 
                         // Load the image file into a byte array
                         byte[] imageData = Files.readAllBytes(Paths.get(imagePath));
 
-                        long endTime = System.nanoTime(); // End timing
-                        System.out.println("Image " + imageNumber + " loading time: " + (endTime - startTime)/1_000_000 + " ms");
+                        long imgLoadEnd = System.currentTimeMillis(); // End timing
+                        System.out.println("Image " + imageNumber + " loading time: " + (imgLoadEnd - imgLoadBegin) + "ms");
 
                         int chunkSize = 508; // Safe payload size for UDP to avoid fragmentation
                         for (int i = 0; i < imageData.length; i += chunkSize) {
