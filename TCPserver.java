@@ -55,7 +55,15 @@ public class TCPserver {
                     } else if (str.startsWith("Image")) {
                         // Extract the image number from the request
                         int imageNumber = Integer.parseInt(str.substring(6)); // Assuming request format is "Image X"
+
+                        long startTime = System.nanoTime(); // Start timing
+
                         sendImage(client, imageNumber);
+
+                        long endTime = System.nanoTime(); // Start timing
+
+                        System.out.println("Image " + imageNumber + " loading time: " + (endTime - startTime)/1_000_000 + " ms");
+
                     } else {
                         toClient.writeUTF("Error: Unsupported request. Please request an image.");
                     }

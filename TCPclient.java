@@ -15,9 +15,15 @@ public class TCPclient {
         HashSet<Integer> sent = new HashSet<>();
         ArrayList<Long> roundTripTimes = new ArrayList<>(); // To store the round-trip times
 
+        long TCPstartTime = System.currentTimeMillis();
+
         try (Socket socket = new Socket(serverIP, port);
-             DataOutputStream out = new DataOutputStream(socket.getOutputStream());
-             DataInputStream dis = new DataInputStream(socket.getInputStream())) {
+
+            DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+            DataInputStream dis = new DataInputStream(socket.getInputStream())) {
+            long TCPendTime = System.currentTimeMillis();
+            long TCPsetupTime = TCPendTime - TCPstartTime;
+            System.out.println("TCP setup time: " + TCPsetupTime + "ms");
 
             while (sent.size() < NUM_IMAGES) {
                 Random rand = new Random();
