@@ -1,6 +1,7 @@
 import java.io.*;
 import java.net.*;
 import java.util.*;
+import java.text.DecimalFormat;
 
 public class UDPclient {
     public static void main(String[] args) {
@@ -13,7 +14,7 @@ public class UDPclient {
             InetAddress serverAddress = InetAddress.getByName(hostAddress); // Or replace with server IP
             long dnsResEnd = System.currentTimeMillis();
             long dnsTotalTime = dnsResEnd - dnsResBegin;
-            System.out.println("DNS resolution time: " + dnsTotalTime + "ms");
+            System.out.println("\nUDP setup time: " + dnsTotalTime + "ms\n----------------------------------\n");
 
 
             byte[] sendData;
@@ -23,7 +24,7 @@ public class UDPclient {
 
             ArrayList<Long> roundTripTimes = new ArrayList<>();
             HashSet<Integer> sent = new HashSet<>();
-
+            System.out.println("Image Request Times: ");
             //generate requests randomly
             while(sent.size() < NUM_IMAGES) {
                 int imageNumber = rand.nextInt(NUM_IMAGES) + 1;
@@ -48,7 +49,7 @@ public class UDPclient {
                             long roundTripEnd = System.currentTimeMillis(); //end of round trip time
                             long roundTripTime = roundTripEnd - roundTripBegin;
                             roundTripTimes.add(roundTripTime);
-                            System.out.println("Round-trip time for image " + imageNumber + ": " + roundTripTime + " ms");
+                            System.out.println("Image " + imageNumber + ": " + roundTripTime + " ms");
                             receiving = false;
                         } else {
                             bos.write(receivePacket.getData(), 0, length);
@@ -59,14 +60,17 @@ public class UDPclient {
                 }
             }
 
+            System.out.println("\n----------------------------------\n");
+            System.out.println("Round Trip Statistics:");
             // Calculate statistics (min, mean, max, stddev)
             // Assuming roundTripTimes is populated with all the round-trip times for each image
+            DecimalFormat round = new DecimalFormat("#.##");
             double min = Collections.min(roundTripTimes);
             double max = Collections.max(roundTripTimes);
             double avg = roundTripTimes.stream().mapToLong(val -> val).average().orElse(0.0);
             double stddev = calculateStdDev(roundTripTimes, avg);
 
-            System.out.println("Min: " + min + " ms, \nMax: " + max + " ms, \nAvg: " + avg + " ms, \nStdDev: " + stddev + " ms");
+            System.out.println("Min: " + min + " ms, \nMax: " + max + " ms, \nAverage: " + round.format(avg) + " ms, \nStandard Deviation: " + round.format(stddev) + " ms");
 
         } catch (IOException e) {
             System.out.println("Client Error: " + e.getMessage());
