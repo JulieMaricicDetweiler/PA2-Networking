@@ -44,11 +44,11 @@ public class TCPserver {
             DataInputStream fromClient = new DataInputStream(client.getInputStream());
 
             String str;
+            System.out.println("Image load times:");
             while (true) {
                 try {
                     str = fromClient.readUTF(); // Read request using DataInputStream
                     str = str.trim();
-                    System.out.println("Got request from client: \"" + str + "\"");
                     if ("bye".equalsIgnoreCase(str)) {
                         toClient.writeUTF("Disconnected");
                         break;
@@ -84,14 +84,13 @@ public class TCPserver {
             bis.close();
 
             long loadEndTime = System.currentTimeMillis(); // End measuring meme access time
-            System.out.println("Loading time for Image " + imageNumber + ": " + (loadEndTime - loadStartTime) + "ms");
+            System.out.println("Image " + imageNumber + ": " + (loadEndTime - loadStartTime) + "ms");
 
             DataOutputStream dos = new DataOutputStream(client.getOutputStream());
             dos.writeLong(bytes.length); // Send file size first
             dos.write(bytes, 0, bytes.length); // Then send file
             dos.flush();
 
-            System.out.println("Image " + imageNumber + " sent to client.\n\n-----------------------------------\n");
         } catch (FileNotFoundException e) {
             System.out.println("Image file not found.");
         } catch (IOException e) {

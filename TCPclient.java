@@ -16,16 +16,16 @@ public class TCPclient {
         HashSet<Integer> sent = new HashSet<>();
         ArrayList<Long> roundTripTimes = new ArrayList<>(); // To store the round-trip times
 
-        long dnsResBegin = System.currentTimeMillis();
+        long dnsResBegin = System.currentTimeMillis(); //BEGINNING OF TCP SETUP
 
         try (Socket socket = new Socket(serverIP, port);
 
             DataOutputStream out = new DataOutputStream(socket.getOutputStream());
             DataInputStream dis = new DataInputStream(socket.getInputStream())) {
-            long dnsResEnd = System.currentTimeMillis();
+            long dnsResEnd = System.currentTimeMillis(); //END OF TCP SETUP
             long TCPsetupTime = dnsResEnd - dnsResBegin;
-            System.out.println("TCP setup time: " + TCPsetupTime + "ms");
-
+            System.out.println("\nTCP setup time: " + TCPsetupTime + "ms\n--------------------------------\n");
+            System.out.println("Image Request Times:");
             while (sent.size() < NUM_IMAGES) {
                 Random rand = new Random();
                 // Ensure unique images are requested
@@ -34,8 +34,7 @@ public class TCPclient {
                     sent.add(imageNumber);
 
                     String request = "Image " + imageNumber;
-                    System.out.println("\nRequesting " + request);
-                    long startTime = System.currentTimeMillis(); //round trip start
+                    long startTime = System.currentTimeMillis(); //BEGINNING OF ROUND TRIP
                     out.writeUTF(request);
 
                     long fileSize = dis.readLong();
@@ -49,14 +48,14 @@ public class TCPclient {
                             totalRead += bytesRead;
                         }
                     }
-                    long endTime = System.currentTimeMillis();
-                    System.out.println("Image " + imageNumber + " received and saved.");
+                    long endTime = System.currentTimeMillis(); //END OF ROUND TRIP
                     long roundTripTime = endTime - startTime;
                     roundTripTimes.add(roundTripTime); // Store round-trip time
-                    System.out.println("Round-trip time for Image " + imageNumber + ": " + roundTripTime + "ms\n\n-----------------------------------\n");
+                    System.out.println("Round-trip time for Image " + imageNumber + ": " + roundTripTime + "ms");
                 }
             }
 
+            System.out.println("\n------------------------------\n");
             // After all requests, calculate statistics
             calculateAndDisplayStatistics(roundTripTimes);
 
@@ -73,7 +72,7 @@ public class TCPclient {
         double stdDev = calculateStandardDeviation(times, avg);
         DecimalFormat round = new DecimalFormat("#.##");
 
-        System.out.println("\nStatistics for round-trip times:");
+        System.out.println("Round Trip Statistics:");
         System.out.println("Min: " + min + " ms");
         System.out.println("Max: " + max + " ms");
         System.out.println("Average: " + round.format(avg) + " ms");
