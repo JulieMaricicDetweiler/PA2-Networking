@@ -1,7 +1,7 @@
 import java.io.*;
 import java.net.*;
 
-public class TCPserver {
+public class TCPServer {
     public static void main(String[] args) {
         int port_number = 0;
         ServerSocket server = null;
