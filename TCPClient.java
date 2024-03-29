@@ -20,7 +20,7 @@ public class TCPClient {
             return;
         }
 
-        final int NUM_IMAGES = 3; // Change to 10 for final requirement
+        final int NUM_IMAGES = 10; // Change to 10 for final requirement
         HashSet<Integer> sent = new HashSet<>();
         ArrayList<Long> roundTripTimes = new ArrayList<>(); // To store the round-trip times
 
