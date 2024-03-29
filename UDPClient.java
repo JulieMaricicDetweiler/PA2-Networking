@@ -32,7 +32,7 @@ public class UDPClient {
 
             byte[] sendData;
             byte[] receiveData = new byte[65507];
-            final int NUM_IMAGES = 3;
+            final int NUM_IMAGES = 10;
             Random rand = new Random();
 
             ArrayList<Long> roundTripTimes = new ArrayList<>();
