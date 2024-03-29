@@ -1,7 +1,7 @@
 import java.io.*;
 import java.net.*;
 
-public class TCPserver {
+public class TCPServer {
     public static void main(String[] args) {
         int port_number = 0;
         ServerSocket server = null;
@@ -44,11 +44,11 @@ public class TCPserver {
             DataInputStream fromClient = new DataInputStream(client.getInputStream());
 
             String str;
+            System.out.println("Image load times:");
             while (true) {
                 try {
                     str = fromClient.readUTF(); // Read request using DataInputStream
                     str = str.trim();
-                    System.out.println("Got request from client: \"" + str + "\"");
                     if ("bye".equalsIgnoreCase(str)) {
                         toClient.writeUTF("Disconnected");
                         break;
@@ -64,7 +64,7 @@ public class TCPserver {
                     break; // Break the loop if the client disconnects
                 }
             }
-            System.out.println("Closing connection...");
+            System.out.println("Closing connection...\n\n");
             client.close();
         } catch (IOException e) {
             System.out.println("Error processing request: " + e.getMessage());
@@ -75,22 +75,22 @@ public class TCPserver {
     private static void sendImage(Socket client, int imageNumber) {
         try {
             File file = new File("./images/image" + imageNumber + ".jpg"); // Adjust path as needed
-            long startTime = System.currentTimeMillis(); // Start measuring meme access time
+            long loadStartTime = System.currentTimeMillis(); // Start measuring meme access time
 
             byte[] bytes = new byte[(int) file.length()];
             FileInputStream fis = new FileInputStream(file);
             BufferedInputStream bis = new BufferedInputStream(fis);
             bis.read(bytes, 0, bytes.length);
+            bis.close();
 
-            long endTime = System.currentTimeMillis(); // End measuring meme access time
-            System.out.println("Meme access time for image " + imageNumber + ": " + (endTime - startTime) + "ms");
+            long loadEndTime = System.currentTimeMillis(); // End measuring meme access time
+            System.out.println("Image " + imageNumber + ": " + (loadEndTime - loadStartTime) + "ms");
 
             DataOutputStream dos = new DataOutputStream(client.getOutputStream());
             dos.writeLong(bytes.length); // Send file size first
             dos.write(bytes, 0, bytes.length); // Then send file
             dos.flush();
 
-            System.out.println("Image " + imageNumber + " sent to client.\n");
         } catch (FileNotFoundException e) {
             System.out.println("Image file not found.");
         } catch (IOException e) {

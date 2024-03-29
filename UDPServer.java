@@ -4,14 +4,15 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
 
-public class UDPserver {
+public class UDPServer {
     public static void main(String[] args) {
         DatagramSocket socket = null;
         try {
-            int port = 1234; // Replace with your port
+            int port = Integer.parseInt(args[0]); // Replace with your port
             socket = new DatagramSocket(port);
-            System.out.println("Server is running on port " + port);
+            System.out.println("Server is running on port " + port + "\n-----------------------------------\n");
 
+            System.out.println("Image Load Times:");
             while (true) {
                 byte[] receiveData = new byte[1024];
 
@@ -30,13 +31,13 @@ public class UDPserver {
                         int imageNumber = Integer.parseInt(parts[1]);
                         String imagePath = "./images/" + "image" + imageNumber + ".jpg"; // Corrected path concatenation
 
-                        long startTime = System.nanoTime(); // Start timing
+                        long imgLoadBegin = System.currentTimeMillis(); // BEGIN IMAGE LOAD TIME
 
                         // Load the image file into a byte array
                         byte[] imageData = Files.readAllBytes(Paths.get(imagePath));
 
-                        long endTime = System.nanoTime(); // End timing
-                        System.out.println("Image " + imageNumber + " loading time: " + (endTime - startTime)/1_000_000 + " ms");
+                        long imgLoadEnd = System.currentTimeMillis(); // END IMAGE LOAD TIME
+                        System.out.println("Image " + imageNumber + ": " + (imgLoadEnd - imgLoadBegin) + "ms");
 
                         int chunkSize = 508; // Safe payload size for UDP to avoid fragmentation
                         for (int i = 0; i < imageData.length; i += chunkSize) {
@@ -47,8 +48,6 @@ public class UDPserver {
                         }
                         // Send a zero-length packet as end of transmission indicator
                         socket.send(new DatagramPacket(new byte[0], 0, clientAddress, clientPort));
-
-                        System.out.println("Image " + imageNumber + " sent to the client in chunks.");
                     }
                 } else {
                     // If the request does not start with "Image", send an error message back to the client
@@ -62,6 +61,7 @@ public class UDPserver {
             System.out.println("Server Exception: " + e.getMessage());
         } finally {
             if (socket != null && !socket.isClosed()) {
+                System.out.println("\n------------------------\n\nClosing connection...");
                 socket.close();
             }
         }

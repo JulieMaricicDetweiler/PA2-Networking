@@ -1,19 +1,43 @@
 import java.io.*;
 import java.net.*;
 import java.util.*;
+import java.text.DecimalFormat;
 
-public class UDPclient {
+public class UDPClient {
     public static void main(String[] args) {
+        if (args.length != 2) {
+            System.out.println("Usage: java UDPclient <Server IP> <Port Number>");
+            return;
+        }
+
+        String hostAddress = "";
+        int port = 0;
+        try {
+            hostAddress = args[0];
+            port = Integer.parseInt(args[1]);
+        } catch(NumberFormatException e) {
+            System.out.println("Error: " + e.getMessage() + "\nUsage: java UDPclient <Server IP> <Port Number>");
+            return;
+        }
+
         try (DatagramSocket socket = new DatagramSocket()) {
-            InetAddress serverAddress = InetAddress.getByName("localhost"); // Or replace with server IP
+
+            //resolve host and get time
+            long dnsResBegin = System.currentTimeMillis(); //BEGIN UDP SETUP TIME
+            InetAddress serverAddress = InetAddress.getByName(hostAddress); // Or replace with server IP
+            long dnsResEnd = System.currentTimeMillis(); //END UDP SETUP TIME
+            long dnsTotalTime = dnsResEnd - dnsResBegin;
+            System.out.println("\nUDP setup time: " + dnsTotalTime + "ms\n----------------------------------\n");
+
+
             byte[] sendData;
             byte[] receiveData = new byte[65507];
-            int NUM_IMAGES = 3;
+            final int NUM_IMAGES = 3;
             Random rand = new Random();
+
             ArrayList<Long> roundTripTimes = new ArrayList<>();
-
             HashSet<Integer> sent = new HashSet<>();
-
+            System.out.println("Image Request Times: ");
             //generate requests randomly
             while(sent.size() < NUM_IMAGES) {
                 int imageNumber = rand.nextInt(NUM_IMAGES) + 1;
@@ -23,8 +47,8 @@ public class UDPclient {
                     sent.add(imageNumber);
                     sendData = request.getBytes();
 
-                    long sendTime = System.currentTimeMillis();
-                    DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, serverAddress, 1234);
+                    long roundTripBegin = System.currentTimeMillis(); //BEGIN ROUND TRIP TIME
+                    DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, serverAddress, port);
                     socket.send(sendPacket);
 
                     FileOutputStream fos = new FileOutputStream("received_image" + imageNumber + ".jpg");
@@ -35,10 +59,10 @@ public class UDPclient {
                         socket.receive(receivePacket);
                         int length = receivePacket.getLength();
                         if (length == 0) {
-                            long receiveTime = System.currentTimeMillis();
-                            long roundTripTime = receiveTime - sendTime;
+                            long roundTripEnd = System.currentTimeMillis(); //END ROUND TRIP TIME
+                            long roundTripTime = roundTripEnd - roundTripBegin;
                             roundTripTimes.add(roundTripTime);
-                            System.out.println("Round-trip time for image " + imageNumber + ": " + roundTripTime + " ms");
+                            System.out.println("Image " + imageNumber + ": " + roundTripTime + " ms");
                             receiving = false;
                         } else {
                             bos.write(receivePacket.getData(), 0, length);
@@ -49,14 +73,17 @@ public class UDPclient {
                 }
             }
 
+            System.out.println("\n----------------------------------\n");
+            System.out.println("Round Trip Statistics:");
             // Calculate statistics (min, mean, max, stddev)
             // Assuming roundTripTimes is populated with all the round-trip times for each image
+            DecimalFormat round = new DecimalFormat("#.##");
             double min = Collections.min(roundTripTimes);
             double max = Collections.max(roundTripTimes);
             double avg = roundTripTimes.stream().mapToLong(val -> val).average().orElse(0.0);
             double stddev = calculateStdDev(roundTripTimes, avg);
 
-            System.out.println("Min: " + min + " ms, \nMax: " + max + " ms, \nAvg: " + avg + " ms, \nStdDev: " + stddev + " ms");
+            System.out.println("Min: " + min + " ms, \nMax: " + max + " ms, \nAverage: " + round.format(avg) + " ms, \nStandard Deviation: " + round.format(stddev) + " ms");
 
         } catch (IOException e) {
             System.out.println("Client Error: " + e.getMessage());
