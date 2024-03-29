@@ -8,37 +8,45 @@ public class UDPclient {
             InetAddress serverAddress = InetAddress.getByName("localhost"); // Or replace with server IP
             byte[] sendData;
             byte[] receiveData = new byte[65507];
+            int NUM_IMAGES = 3;
             Random rand = new Random();
             ArrayList<Long> roundTripTimes = new ArrayList<>();
 
-            for (int i = 0; i < 3; i++) {
-                int imageNumber = rand.nextInt(3) + 1;
-                String request = "Image " + imageNumber;
-                sendData = request.getBytes();
+            HashSet<Integer> sent = new HashSet<>();
 
-                long sendTime = System.currentTimeMillis();
-                DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, serverAddress, 1234);
-                socket.send(sendPacket);
+            //generate requests randomly
+            while(sent.size() < NUM_IMAGES) {
+                int imageNumber = rand.nextInt(NUM_IMAGES) + 1;
 
-                FileOutputStream fos = new FileOutputStream("received_image" + imageNumber + ".jpg");
-                BufferedOutputStream bos = new BufferedOutputStream(fos);
-                boolean receiving = true;
-                while (receiving) {
-                    DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
-                    socket.receive(receivePacket);
-                    int length = receivePacket.getLength();
-                    if (length == 0) {
-                        long receiveTime = System.currentTimeMillis();
-                        long roundTripTime = receiveTime - sendTime;
-                        roundTripTimes.add(roundTripTime);
-                        System.out.println("Round-trip time for image " + imageNumber + ": " + roundTripTime + " ms");
-                        receiving = false;
-                    } else {
-                        bos.write(receivePacket.getData(), 0, length);
+                if(!sent.contains(imageNumber)) { //make sure image number is not already recieved
+                    String request = "Image " + imageNumber; //request string
+                    sent.add(imageNumber);
+                    sendData = request.getBytes();
+
+                    long sendTime = System.currentTimeMillis();
+                    DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, serverAddress, 1234);
+                    socket.send(sendPacket);
+
+                    FileOutputStream fos = new FileOutputStream("received_image" + imageNumber + ".jpg");
+                    BufferedOutputStream bos = new BufferedOutputStream(fos);
+                    boolean receiving = true;
+                    while (receiving) {
+                        DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
+                        socket.receive(receivePacket);
+                        int length = receivePacket.getLength();
+                        if (length == 0) {
+                            long receiveTime = System.currentTimeMillis();
+                            long roundTripTime = receiveTime - sendTime;
+                            roundTripTimes.add(roundTripTime);
+                            System.out.println("Round-trip time for image " + imageNumber + ": " + roundTripTime + " ms");
+                            receiving = false;
+                        } else {
+                            bos.write(receivePacket.getData(), 0, length);
+                        }
                     }
+                    bos.flush();
+                    bos.close();
                 }
-                bos.flush();
-                bos.close();
             }
 
             // Calculate statistics (min, mean, max, stddev)
